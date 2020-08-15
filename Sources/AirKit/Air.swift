@@ -3,7 +3,7 @@ import SwiftUI
 
 public class Air {
     
-    public static let shared = Air()
+    static let shared = Air()
     
     var airScreen: UIScreen?
     var airWindow: UIWindow?
@@ -28,9 +28,8 @@ public class Air {
         
     }
     
-    public func addHostingController(_ hostingController: UIHostingController<AnyView>) {
-        print("AirKit - Add Hosting Controller")
-        self.hostingController = hostingController
+    public static func play(_ view: AnyView) {
+        Air.shared.hostingController = UIHostingController<AnyView>(rootView: view)
     }
     
 //    public func addSubview(_ view: UIView) {
