@@ -1,6 +1,6 @@
 # AirKit
 
-<img src="" height="100" />
+<img src="https://github.com/hexagons/AirKit/blob/main/Assets/airplayvideo.jpeg?raw=true" height="100" />
 
 ## Add to App
 
@@ -25,7 +25,7 @@ struct ContentView: View {
 You can also *Air* a View that is not on the main screen:
 
 ~~~~swift
-Air.play(AnyView(Text("Works over HDMI")))
+Air.play(AnyView(Image(systemName: "airplayvideo")))
 ~~~~
 
 ## Add to Package
