@@ -1,6 +1,8 @@
+<img src="https://github.com/hexagons/AirKit/blob/main/Assets/airplayvideo.jpeg?raw=true" height="100" />
+
 # AirKit
 
-<img src="" height="100" />
+AirPlay SwiftUI Views
 
 ## Add to App
 
@@ -25,7 +27,15 @@ struct ContentView: View {
 You can also *Air* a View that is not on the main screen:
 
 ~~~~swift
-Air.play(AnyView(Text("Works over HDMI")))
+Air.play(AnyView(Image(systemName: "airplayvideo")))
+~~~~
+
+To listen to the connection call:
+
+~~~~swift
+Air.connection { connected in
+    let isAirPaying: Bool = connected
+}
 ~~~~
 
 ## Add to Package
