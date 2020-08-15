@@ -5,22 +5,27 @@ public class Air {
     
     static let shared = Air()
     
+    public var connected: Bool = false {
+        didSet {
+            connectionCallbacks.forEach({ $0(connected) })
+        }
+    }
+    var connectionCallbacks: [(Bool) -> ()] = []
+    
     var airScreen: UIScreen?
     var airWindow: UIWindow?
     
-//    let airView: UIView
     var hostingController: UIHostingController<AnyView>?
     
     var appIsActive: Bool { UIApplication.shared.applicationState == .active }
     
     init() {
         
-//        airView = UIView()
-        
         NotificationCenter.default.addObserver(self, selector: #selector(didConnect),
                                                name: UIScreen.didConnectNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(didDisconnect),
                                                name: UIScreen.didDisconnectNotification, object: nil)
+        
         NotificationCenter.default.addObserver(self, selector: #selector(didBecomeActive),
                                                name: UIApplication.didBecomeActiveNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(willResignActive),
@@ -32,47 +37,44 @@ public class Air {
         Air.shared.hostingController = UIHostingController<AnyView>(rootView: view)
     }
     
-//    public func addSubview(_ view: UIView) {
-//        print("AirKit - Add Subview")
-//        airView.addSubview(view)
-//        view.translatesAutoresizingMaskIntoConstraints = false
-//        view.topAnchor.constraint(equalTo: airView.topAnchor).isActive = true
-//        view.bottomAnchor.constraint(equalTo: airView.bottomAnchor).isActive = true
-//        view.leftAnchor.constraint(equalTo: airView.leftAnchor).isActive = true
-//        view.rightAnchor.constraint(equalTo: airView.rightAnchor).isActive = true
-//    }
+    public static func connection(_ callback: @escaping (Bool) -> ()) {
+        Air.shared.connectionCallbacks.append(callback)
+    }
     
     @objc func didConnect(sender: NSNotification) {
         print("AirKit - Connect")
         guard let screen: UIScreen = sender.object as? UIScreen else { return }
-        add(screen: screen)
+        add(screen: screen) { success in
+            guard success else { return }
+            self.connected = true
+        }
     }
     
-    func add(screen: UIScreen) {
+    func add(screen: UIScreen, completion: @escaping (Bool) -> ()) {
         
         print("AirKit - Add Screen")
         
         airScreen = screen
         
         airWindow = UIWindow(frame: airScreen!.bounds)
-                
-//        airView.frame = airWindow!.bounds
-//        airWindow!.addSubview(airView)
         
         guard let viewController: UIViewController = hostingController else {
             print("AirKit - Add - Failed: Hosting Controller Not Found")
+            completion(false)
             return
         }
         
         findWindowScene(for: airScreen!) { windowScene in
             guard let airWindowScene: UIWindowScene = windowScene else {
                 print("AirKit - Add - Failed: Window Scene Not Found")
+                completion(false)
                 return
             }
             self.airWindow?.rootViewController = viewController
             self.airWindow?.windowScene = airWindowScene
             self.airWindow?.isHidden = false
             print("AirKit - Add Screen - Done")
+            completion(true)
         }
         
     }
@@ -103,23 +105,21 @@ public class Air {
     @objc func didDisconnect() {
         print("AirKit - Disconnect")
         remove()
+        connected = false
     }
     
     func remove() {
         print("AirKit - Remove")
-//        airView.removeFromSuperview()
         airWindow = nil
         airScreen = nil
     }
     
     @objc func didBecomeActive() {
         print("AirKit - App Active")
-        
     }
     
     @objc func willResignActive() {
         print("AirKit - App Inactive")
-//        airWindow!.isHidden = true
         
     }
     
