@@ -30,6 +30,14 @@ You can also *Air* a View that is not on the main screen:
 Air.play(AnyView(Image(systemName: "airplayvideo")))
 ~~~~
 
+To listen to the connection call:
+
+~~~~swift
+Air.connection { connected in
+    let isAirPaying: Bool = connected
+}
+~~~~
+
 ## Add to Package
 
 ~~~~swift
