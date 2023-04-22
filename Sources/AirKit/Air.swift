@@ -46,7 +46,7 @@ public class Air {
         Air.shared.check()
     }
     
-    public static func stop(_ view: AnyView) {
+    public static func stop() {
         Air.shared.remove()
         Air.shared.hostingController = nil
     }
