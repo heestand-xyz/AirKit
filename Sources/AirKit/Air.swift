@@ -30,8 +30,10 @@ public class Air {
                                                name: UIApplication.didBecomeActiveNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(willResignActive),
                                                name: UIApplication.willResignActiveNotification, object: nil)
-        
-        if let connectedScreen = UIScreen.screens.first(where: { $0 != .main }) {
+    }
+    
+    private func check() {
+       if let connectedScreen = UIScreen.screens.first(where: { $0 != .main }) {
             add(screen: connectedScreen) { success in
                 guard success else { return }
                 self.connected = true
@@ -41,6 +43,12 @@ public class Air {
     
     public static func play(_ view: AnyView) {
         Air.shared.hostingController = UIHostingController<AnyView>(rootView: view)
+        Air.shared.check()
+    }
+    
+    public static func stop(_ view: AnyView) {
+        Air.shared.remove()
+        Air.shared.hostingController = nil
     }
     
     public static func connection(_ callback: @escaping (Bool) -> ()) {
