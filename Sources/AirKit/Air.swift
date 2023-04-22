@@ -31,6 +31,12 @@ public class Air {
         NotificationCenter.default.addObserver(self, selector: #selector(willResignActive),
                                                name: UIApplication.willResignActiveNotification, object: nil)
         
+        if let connectedScreen = UIScreen.screens.first(where: { $0 != .main }) {
+            add(screen: connectedScreen) { success in
+                guard success else { return }
+                self.connected = true
+            }
+        }
     }
     
     public static func play(_ view: AnyView) {
