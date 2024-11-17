@@ -1,23 +1,35 @@
 import UIKit
 import SwiftUI
 
+@Observable
 public class Air {
     
-    static let shared = Air()
+    public static let shared = Air()
     
-    public var connected: Bool = false {
+    public struct Connection {
+        public internal(set) var isAvailable: Bool
+        public internal(set) var isViewAdded: Bool
+        static let disconnected = Connection(isAvailable: false, isViewAdded: false)
+    }
+    public private(set) var connection: Connection = .disconnected {
         didSet {
-            connectionCallbacks.forEach({ $0(connected) })
+            connectionCallbacks.forEach({ $0(oldValue, connection) })
         }
     }
-    var connectionCallbacks: [(Bool) -> ()] = []
+    @ObservationIgnored
+    var connectionCallbacks: [(Connection, Connection) -> ()] = []
     
+    @ObservationIgnored
     var airScreen: UIScreen?
+    @ObservationIgnored
     var airWindow: UIWindow?
     
+    @ObservationIgnored
     var hostingController: UIHostingController<AnyView>?
     
-    var appIsActive: Bool { UIApplication.shared.applicationState == .active }
+    var appIsActive: Bool {
+        UIApplication.shared.applicationState == .active
+    }
     
     init() {
         
@@ -32,35 +44,42 @@ public class Air {
                                                name: UIApplication.willResignActiveNotification, object: nil)
     }
     
-    private func check() {
+    public static func play<Content: View>(@ViewBuilder content: () -> Content) {
+        play(AnyView(content()))
+    }
+    
+    public static func play(_ view: AnyView) {
+        print("AirKit - Play")
+        Air.shared.hostingController = UIHostingController<AnyView>(rootView: view)
+        Air.shared.playIfCan()
+    }
+    
+    private func playIfCan() {
        if let connectedScreen = UIScreen.screens.first(where: { $0 != .main }) {
-            add(screen: connectedScreen) { success in
+            add(screen: connectedScreen) { [weak self] success in
                 guard success else { return }
-                self.connected = true
+                self?.connection.isViewAdded = true
             }
         }
     }
     
-    public static func play(_ view: AnyView) {
-        Air.shared.hostingController = UIHostingController<AnyView>(rootView: view)
-        Air.shared.check()
-    }
-    
     public static func stop() {
+        print("AirKit - Stop")
         Air.shared.remove()
         Air.shared.hostingController = nil
     }
     
-    public static func connection(_ callback: @escaping (Bool) -> ()) {
+    public static func connection(_ callback: @escaping (Connection, Connection) -> ()) {
         Air.shared.connectionCallbacks.append(callback)
     }
     
     @objc func didConnect(sender: NSNotification) {
         print("AirKit - Connect")
         guard let screen: UIScreen = sender.object as? UIScreen else { return }
-        add(screen: screen) { success in
+        connection.isAvailable = true
+        add(screen: screen) { [weak self] success in
             guard success else { return }
-            self.connected = true
+            self?.connection.isViewAdded = true
         }
     }
     
@@ -70,15 +89,14 @@ public class Air {
         
         airScreen = screen
         
-        airWindow = UIWindow(frame: airScreen!.bounds)
+        airWindow = UIWindow(frame: screen.bounds)
         
         guard let viewController: UIViewController = hostingController else {
-            print("AirKit - Add - Failed: Hosting Controller Not Found")
             completion(false)
             return
         }
         
-        findWindowScene(for: airScreen!) { windowScene in
+        findWindowScene(for: screen) { windowScene in
             guard let airWindowScene: UIWindowScene = windowScene else {
                 print("AirKit - Add - Failed: Window Scene Not Found")
                 completion(false)
@@ -119,22 +137,17 @@ public class Air {
     @objc func didDisconnect() {
         print("AirKit - Disconnect")
         remove()
-        connected = false
+        connection = .disconnected
     }
     
     func remove() {
         print("AirKit - Remove")
         airWindow = nil
         airScreen = nil
+        connection.isViewAdded = false
     }
     
-    @objc func didBecomeActive() {
-        print("AirKit - App Active")
-    }
+    @objc func didBecomeActive() {}
     
-    @objc func willResignActive() {
-        print("AirKit - App Inactive")
-        
-    }
-    
+    @objc func willResignActive() {}
 }

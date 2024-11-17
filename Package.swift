@@ -1,11 +1,11 @@
-// swift-tools-version:5.3
+// swift-tools-version: 5.10
 
 import PackageDescription
 
 let package = Package(
     name: "AirKit",
     platforms: [
-        .iOS(.v13)
+        .iOS(.v17)
     ],
     products: [
         .library(
